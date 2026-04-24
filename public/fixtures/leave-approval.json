@@ -1,0 +1,70 @@
+{
+  "nodes": [
+    {
+      "id": "start_11",
+      "type": "start",
+      "position": { "x": 420, "y": 80 },
+      "data": {
+        "type": "start",
+        "startTitle": "Leave request submitted",
+        "metadata": [
+          { "key": "leaveType", "value": "Sick" }
+        ]
+      }
+    },
+    {
+      "id": "task_12",
+      "type": "task",
+      "position": { "x": 420, "y": 230 },
+      "data": {
+        "type": "task",
+        "title": "Validate leave balance",
+        "description": "HR checks policy limits and balance",
+        "assignee": "HRBP",
+        "dueDate": "2026-05-02",
+        "customFields": []
+      }
+    },
+    {
+      "id": "approval_13",
+      "type": "approval",
+      "position": { "x": 420, "y": 380 },
+      "data": {
+        "type": "approval",
+        "title": "Manager decision",
+        "approverRole": "Manager",
+        "autoApproveThreshold": 2
+      }
+    },
+    {
+      "id": "automated_14",
+      "type": "automated",
+      "position": { "x": 420, "y": 530 },
+      "data": {
+        "type": "automated",
+        "title": "Notify employee",
+        "actionId": "slack_notify",
+        "actionParams": {
+          "channel": "#hr-alerts",
+          "message": "Leave request approved"
+        }
+      }
+    },
+    {
+      "id": "end_15",
+      "type": "end",
+      "position": { "x": 420, "y": 680 },
+      "data": {
+        "type": "end",
+        "endMessage": "Leave workflow closed",
+        "summaryFlag": false
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e-11-12", "source": "start_11", "target": "task_12" },
+    { "id": "e-12-13", "source": "task_12", "target": "approval_13" },
+    { "id": "e-13-14", "source": "approval_13", "target": "automated_14" },
+    { "id": "e-14-15", "source": "automated_14", "target": "end_15" }
+  ]
+}

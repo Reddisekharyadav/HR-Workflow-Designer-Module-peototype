@@ -1,0 +1,85 @@
+{
+  "nodes": [
+    {
+      "id": "start_21",
+      "type": "start",
+      "position": { "x": 180, "y": 80 },
+      "data": {
+        "type": "start",
+        "startTitle": "User Initializing",
+        "metadata": [
+          { "key": "flow", "value": "testing-workspace" }
+        ]
+      }
+    },
+    {
+      "id": "task_22",
+      "type": "task",
+      "position": { "x": 180, "y": 220 },
+      "data": {
+        "type": "task",
+        "title": "Data Collection",
+        "description": "Gather required onboarding data points",
+        "assignee": "HR Analyst",
+        "dueDate": "2026-05-01",
+        "customFields": []
+      }
+    },
+    {
+      "id": "automated_23",
+      "type": "automated",
+      "position": { "x": 180, "y": 360 },
+      "data": {
+        "type": "automated",
+        "title": "Trigger Automation",
+        "actionId": "generate_doc",
+        "actionParams": {
+          "template": "offer-letter-v2",
+          "recipient": "candidate"
+        }
+      }
+    },
+    {
+      "id": "approval_24",
+      "type": "approval",
+      "position": { "x": 180, "y": 500 },
+      "data": {
+        "type": "approval",
+        "title": "Data Validation",
+        "approverRole": "HRBP",
+        "autoApproveThreshold": 1
+      }
+    },
+    {
+      "id": "automated_25",
+      "type": "automated",
+      "position": { "x": 180, "y": 640 },
+      "data": {
+        "type": "automated",
+        "title": "Output Generation",
+        "actionId": "send_email",
+        "actionParams": {
+          "to": "hr@company.com",
+          "subject": "Workflow Output Ready"
+        }
+      }
+    },
+    {
+      "id": "end_26",
+      "type": "end",
+      "position": { "x": 180, "y": 780 },
+      "data": {
+        "type": "end",
+        "endMessage": "Action Completion",
+        "summaryFlag": true
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e-21-22", "source": "start_21", "target": "task_22" },
+    { "id": "e-22-23", "source": "task_22", "target": "automated_23" },
+    { "id": "e-23-24", "source": "automated_23", "target": "approval_24" },
+    { "id": "e-24-25", "source": "approval_24", "target": "automated_25" },
+    { "id": "e-25-26", "source": "automated_25", "target": "end_26" }
+  ]
+}

@@ -1,0 +1,293 @@
+import { useMemo, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
+import {
+  Background,
+  BackgroundVariant,
+  Controls,
+  MiniMap,
+  ReactFlow,
+  ReactFlowProvider,
+  type OnSelectionChangeParams,
+  type ReactFlowInstance,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import ApprovalNode from './components/nodes/ApprovalNode';
+import AutomatedNode from './components/nodes/AutomatedNode';
+import EndNode from './components/nodes/EndNode';
+import StartNode from './components/nodes/StartNode';
+import TaskNode from './components/nodes/TaskNode';
+import AppSidebar from './components/panels/AppSidebar';
+import NodeConfigPanel from './components/panels/NodeConfigPanel';
+import NodePalette from './components/panels/NodePalette';
+import SandboxPanel from './components/panels/SandboxPanel';
+import { useAutomations } from './hooks/useAutomations';
+import { useWorkflowDesigner } from './hooks/useWorkflowDesigner';
+import type { SerializedWorkflow, WorkflowEdge, WorkflowNode, WorkflowNodeType } from './types/workflow';
+
+const INITIAL_QUICK_ADD_X = 160;
+const QUICK_ADD_GAP = 48;
+
+type SidebarSection =
+  | 'dashboard'
+  | 'compliance'
+  | 'scheduler'
+  | 'analytics'
+  | 'integrations'
+  | 'repository'
+  | 'workflows'
+  | 'settings'
+  | 'support';
+
+const DesignerApp = () => {
+  const {
+    nodes,
+    edges,
+    selectedNode,
+    setSelectedNodeId,
+    validationIssues,
+    serializedWorkflow,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    addNode,
+    loadWorkflow,
+    updateNodeData,
+  } = useWorkflowDesigner();
+
+  const { automations, loading: loadingAutomations, error: automationsError } = useAutomations();
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance<
+    WorkflowNode,
+    WorkflowEdge
+  > | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<SidebarSection>('dashboard');
+  const [showAppSidebar, setShowAppSidebar] = useState(true);
+  const [showPalette, setShowPalette] = useState(true);
+  const [showConfigPanel, setShowConfigPanel] = useState(true);
+  const canvasRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const nodeTypes = useMemo(
+    () => ({
+      start: StartNode,
+      task: TaskNode,
+      approval: ApprovalNode,
+      automated: AutomatedNode,
+      end: EndNode,
+    }),
+    [],
+  );
+
+  const onDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  };
+
+  const onDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+
+    if (!reactFlowInstance) {
+      return;
+    }
+
+    const type = event.dataTransfer.getData('application/reactflow-node-type') as WorkflowNodeType;
+
+    if (!type) {
+      return;
+    }
+
+    const position = reactFlowInstance.screenToFlowPosition({
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    addNode(type, position.x, position.y);
+  };
+
+  const onQuickAdd = (type: WorkflowNodeType) => {
+    const x = INITIAL_QUICK_ADD_X + nodes.length * QUICK_ADD_GAP;
+    const y = 100 + (nodes.length % 3) * 120;
+    addNode(type, x, y);
+  };
+
+  const onSelectionChange = ({ nodes: selectedNodes }: OnSelectionChangeParams<WorkflowNode>) => {
+    setSelectedNodeId(selectedNodes[0]?.id ?? null);
+  };
+
+  const exportWorkflow = () => {
+    const payload = JSON.stringify(serializedWorkflow, null, 2);
+    const blob = new Blob([payload], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+
+    anchor.href = url;
+    anchor.download = `workflow-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const isSerializedWorkflow = (value: unknown): value is SerializedWorkflow => {
+    if (!value || typeof value !== 'object') {
+      return false;
+    }
+
+    const candidate = value as { nodes?: unknown; edges?: unknown };
+    return Array.isArray(candidate.nodes) && Array.isArray(candidate.edges);
+  };
+
+  const onImportFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+
+      if (!isSerializedWorkflow(parsed)) {
+        setImportError('Invalid workflow file. Expected nodes and edges arrays.');
+        return;
+      }
+
+      loadWorkflow(parsed);
+      setImportError(null);
+    } catch {
+      setImportError('Could not parse the selected JSON file.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const loadSample = async (sampleName: string) => {
+    try {
+      const response = await fetch(`/fixtures/${sampleName}.json`);
+      const payload = await response.json();
+
+      if (!isSerializedWorkflow(payload)) {
+        setImportError(`Sample ${sampleName} has invalid format.`);
+        return;
+      }
+
+      loadWorkflow(payload);
+      setImportError(null);
+    } catch {
+      setImportError(`Unable to load sample ${sampleName}.`);
+    }
+  };
+
+  return (
+    <div className="app-shell">
+      <header className="topbar">
+        <div>
+          <h1>HR Workflow Designer</h1>
+          <p>
+            Active section: <strong>{activeSection}</strong>
+          </p>
+        </div>
+        <div className="topbar-actions">
+          <button type="button" className="secondary" onClick={() => setShowAppSidebar((v) => !v)}>
+            {showAppSidebar ? 'Hide App Sidebar' : 'Show App Sidebar'}
+          </button>
+          <button type="button" className="secondary" onClick={() => setShowPalette((v) => !v)}>
+            {showPalette ? 'Hide Node Palette' : 'Show Node Palette'}
+          </button>
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => setShowConfigPanel((v) => !v)}
+          >
+            {showConfigPanel ? 'Hide Config Panel' : 'Show Config Panel'}
+          </button>
+          <button type="button" className="secondary" onClick={() => loadSample('onboarding')}>
+            Load Onboarding Sample
+          </button>
+          <button type="button" className="secondary" onClick={() => loadSample('leave-approval')}>
+            Load Leave Sample
+          </button>
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => loadSample('studio-testing-workspace')}
+          >
+            Load Studio Testing Workspace
+          </button>
+          <button type="button" className="secondary" onClick={() => fileInputRef.current?.click()}>
+            Import JSON
+          </button>
+          <button type="button" onClick={exportWorkflow}>
+            Export JSON
+          </button>
+          <div className="status-pill">Nodes: {nodes.length} | Edges: {edges.length}</div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json"
+            className="hidden-input"
+            onChange={onImportFile}
+          />
+        </div>
+      </header>
+
+      <main
+        className={[
+          'workspace-grid',
+          showAppSidebar ? '' : 'hide-app-sidebar',
+          showPalette ? '' : 'hide-palette',
+          showConfigPanel ? '' : 'hide-config',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
+        {showAppSidebar && (
+          <AppSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+        )}
+        {showPalette && <NodePalette onAddQuick={onQuickAdd} />}
+
+        <section className="canvas-section" ref={canvasRef} onDrop={onDrop} onDragOver={onDragOver}>
+          <div className="canvas-head">
+            <h2>Workflow Canvas</h2>
+            <p>Drag nodes, connect edges, select to configure, and press Delete to remove.</p>
+          </div>
+
+          <ReactFlow
+            fitView
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            onInit={setReactFlowInstance}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onSelectionChange={onSelectionChange}
+            deleteKeyCode={['Delete', 'Backspace']}
+            panOnDrag
+            selectionOnDrag
+          >
+            <Controls />
+            <MiniMap zoomable pannable />
+            <Background variant={BackgroundVariant.Dots} size={1.2} gap={20} />
+          </ReactFlow>
+
+          {loadingAutomations && <p className="canvas-hint">Loading automation actions from mock API...</p>}
+          {automationsError && <p className="error">{automationsError}</p>}
+        </section>
+
+        {showConfigPanel && (
+          <NodeConfigPanel node={selectedNode} automations={automations} onUpdate={updateNodeData} />
+        )}
+      </main>
+
+      <SandboxPanel workflow={serializedWorkflow} issues={validationIssues} />
+      {importError && <p className="import-error">{importError}</p>}
+    </div>
+  );
+};
+
+const App = () => (
+  <ReactFlowProvider>
+    <DesignerApp />
+  </ReactFlowProvider>
+);
+
+export default App;

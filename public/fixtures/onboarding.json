@@ -1,0 +1,73 @@
+{
+  "nodes": [
+    {
+      "id": "start_1",
+      "type": "start",
+      "position": { "x": 120, "y": 80 },
+      "data": {
+        "type": "start",
+        "startTitle": "New employee joins",
+        "metadata": [
+          { "key": "department", "value": "Engineering" },
+          { "key": "location", "value": "Bangalore" }
+        ]
+      }
+    },
+    {
+      "id": "task_2",
+      "type": "task",
+      "position": { "x": 120, "y": 230 },
+      "data": {
+        "type": "task",
+        "title": "Collect employee documents",
+        "description": "ID proof, address proof, tax and bank details",
+        "assignee": "HR Operations",
+        "dueDate": "2026-04-30",
+        "customFields": [
+          { "key": "checklist", "value": "passport,pan,bank" }
+        ]
+      }
+    },
+    {
+      "id": "approval_3",
+      "type": "approval",
+      "position": { "x": 120, "y": 380 },
+      "data": {
+        "type": "approval",
+        "title": "Manager onboarding approval",
+        "approverRole": "Manager",
+        "autoApproveThreshold": 0
+      }
+    },
+    {
+      "id": "automated_4",
+      "type": "automated",
+      "position": { "x": 120, "y": 530 },
+      "data": {
+        "type": "automated",
+        "title": "Send welcome email",
+        "actionId": "send_email",
+        "actionParams": {
+          "to": "new.employee@company.com",
+          "subject": "Welcome to the team"
+        }
+      }
+    },
+    {
+      "id": "end_5",
+      "type": "end",
+      "position": { "x": 120, "y": 680 },
+      "data": {
+        "type": "end",
+        "endMessage": "Onboarding completed",
+        "summaryFlag": true
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e-1-2", "source": "start_1", "target": "task_2" },
+    { "id": "e-2-3", "source": "task_2", "target": "approval_3" },
+    { "id": "e-3-4", "source": "approval_3", "target": "automated_4" },
+    { "id": "e-4-5", "source": "automated_4", "target": "end_5" }
+  ]
+}
