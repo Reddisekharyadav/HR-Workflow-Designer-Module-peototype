@@ -12,11 +12,18 @@ type SidebarSection =
 type AppSidebarProps = {
   activeSection: SidebarSection;
   onSectionChange: (section: SidebarSection) => void;
+  onToggle: () => void;
 };
 
-const AppSidebar = ({ activeSection, onSectionChange }: AppSidebarProps) => {
+const AppSidebar = ({ activeSection, onSectionChange, onToggle }: AppSidebarProps) => {
   return (
     <aside className="panel app-sidebar">
+      <div className="panel-title-row">
+        <h2>Workspace</h2>
+        <button type="button" className="icon-toggle" onClick={onToggle} aria-label="Hide app sidebar">
+          {'<'}
+        </button>
+      </div>
       <div className="sidebar-brand">
         <div className="brand-dot" />
         <div>

@@ -94,45 +94,77 @@ body {
   padding: 10px 12px;
 }
 
-.workspace-grid {
-  display: grid;
-  grid-template-columns: 220px 280px 1fr 350px;
+.workspace-flex {
+  display: flex;
+  align-items: stretch;
   gap: 14px;
   min-height: 66vh;
 }
 
-.workspace-grid.hide-app-sidebar {
-  grid-template-columns: 280px 1fr 350px;
+.panel-wrap {
+  display: flex;
+  min-width: 0;
 }
 
-.workspace-grid.hide-palette {
-  grid-template-columns: 220px 1fr 350px;
+.resize-handle {
+  width: 8px;
+  border-radius: 999px;
+  background: #dce4db;
+  cursor: col-resize;
+  transition: background 0.2s ease;
 }
 
-.workspace-grid.hide-config {
-  grid-template-columns: 220px 280px 1fr;
+.resize-handle:hover {
+  background: #b8c7ba;
 }
 
-.workspace-grid.hide-app-sidebar.hide-palette {
-  grid-template-columns: 1fr 350px;
+.collapsed-tab {
+  width: 26px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px;
+  align-self: center;
+  background: #f6faf5;
+  color: var(--text);
+  font-weight: 700;
 }
 
-.workspace-grid.hide-app-sidebar.hide-config {
-  grid-template-columns: 280px 1fr;
+.collapsed-tab.left {
+  margin-right: -4px;
 }
 
-.workspace-grid.hide-palette.hide-config {
-  grid-template-columns: 220px 1fr;
+.collapsed-tab.right {
+  margin-left: -4px;
 }
 
-.workspace-grid.hide-app-sidebar.hide-palette.hide-config {
-  grid-template-columns: 1fr;
+body.is-resizing {
+  user-select: none;
+  cursor: col-resize;
 }
 
 .app-sidebar {
   display: grid;
   grid-template-rows: auto auto auto 1fr;
   gap: 12px;
+}
+
+.panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.icon-toggle {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 8px;
+  background: #f1f6ef;
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-weight: 700;
 }
 
 .sidebar-brand {
@@ -208,6 +240,7 @@ body {
 .panel {
   padding: 14px;
   overflow: hidden;
+  width: 100%;
 }
 
 .palette-panel,
@@ -288,6 +321,8 @@ button.secondary {
   display: grid;
   grid-template-rows: auto 1fr auto;
   height: 66vh;
+  flex: 1;
+  min-width: 420px;
   overflow: hidden;
 }
 
@@ -446,12 +481,22 @@ pre {
 }
 
 @media (max-width: 1220px) {
-  .workspace-grid {
-    grid-template-columns: 1fr;
+  .workspace-flex {
+    flex-direction: column;
   }
 
   .app-sidebar {
     grid-template-rows: auto;
+  }
+
+  .resize-handle {
+    display: none;
+  }
+
+  .collapsed-tab {
+    width: 100%;
+    border-radius: 10px;
+    margin: 0;
   }
 
   .canvas-section {

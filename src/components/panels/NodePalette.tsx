@@ -17,9 +17,10 @@ const ITEMS: PaletteItem[] = [
 
 type NodePaletteProps = {
   onAddQuick: (type: WorkflowNodeType) => void;
+  onToggle: () => void;
 };
 
-const NodePalette = ({ onAddQuick }: NodePaletteProps) => {
+const NodePalette = ({ onAddQuick, onToggle }: NodePaletteProps) => {
   const onDragStart = (event: DragEvent<HTMLDivElement>, type: WorkflowNodeType) => {
     event.dataTransfer.setData('application/reactflow-node-type', type);
     event.dataTransfer.effectAllowed = 'move';
@@ -27,7 +28,12 @@ const NodePalette = ({ onAddQuick }: NodePaletteProps) => {
 
   return (
     <aside className="panel palette-panel">
-      <h2>Node Palette</h2>
+      <div className="panel-title-row">
+        <h2>Node Palette</h2>
+        <button type="button" className="icon-toggle" onClick={onToggle} aria-label="Hide node palette">
+          {'<'}
+        </button>
+      </div>
       <p>Drag nodes into canvas or click Quick Add.</p>
       <div className="palette-list">
         {ITEMS.map((item) => (

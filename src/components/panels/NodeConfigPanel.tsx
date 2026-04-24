@@ -9,6 +9,7 @@ type NodeConfigPanelProps = {
   node: WorkflowNode | null;
   automations: AutomationDefinition[];
   onUpdate: (nodeId: string, updater: (node: WorkflowNode) => WorkflowNode) => void;
+  onToggle: () => void;
 };
 
 const KeyValueEditor = ({
@@ -48,11 +49,16 @@ const KeyValueEditor = ({
   );
 };
 
-const NodeConfigPanel = ({ node, automations, onUpdate }: NodeConfigPanelProps) => {
+const NodeConfigPanel = ({ node, automations, onUpdate, onToggle }: NodeConfigPanelProps) => {
   if (!node) {
     return (
       <aside className="panel config-panel">
-        <h2>Node Configuration</h2>
+        <div className="panel-title-row">
+          <h2>Node Configuration</h2>
+          <button type="button" className="icon-toggle" onClick={onToggle} aria-label="Hide configuration panel">
+            {'>'}
+          </button>
+        </div>
         <p>Select a node from canvas to edit its properties.</p>
       </aside>
     );
@@ -66,7 +72,12 @@ const NodeConfigPanel = ({ node, automations, onUpdate }: NodeConfigPanelProps) 
 
   return (
     <aside className="panel config-panel">
-      <h2>Node Configuration</h2>
+      <div className="panel-title-row">
+        <h2>Node Configuration</h2>
+        <button type="button" className="icon-toggle" onClick={onToggle} aria-label="Hide configuration panel">
+          {'>'}
+        </button>
+      </div>
       <p>
         Editing <strong>{node.id}</strong> ({data.type})
       </p>

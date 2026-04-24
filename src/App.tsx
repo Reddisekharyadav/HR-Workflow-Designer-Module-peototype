@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
+import { useMemo, useRef, useState, type ChangeEvent, type DragEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import {
   Background,
   BackgroundVariant,
@@ -63,6 +63,9 @@ const DesignerApp = () => {
   const [showAppSidebar, setShowAppSidebar] = useState(true);
   const [showPalette, setShowPalette] = useState(true);
   const [showConfigPanel, setShowConfigPanel] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(220);
+  const [paletteWidth, setPaletteWidth] = useState(280);
+  const [configWidth, setConfigWidth] = useState(350);
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -176,6 +179,42 @@ const DesignerApp = () => {
     }
   };
 
+  const beginResize = (
+    target: 'sidebar' | 'palette' | 'config',
+    reverse = false,
+  ) => (event: ReactMouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+
+    const startX = event.clientX;
+    const startWidth = target === 'sidebar' ? sidebarWidth : target === 'palette' ? paletteWidth : configWidth;
+    const min = target === 'sidebar' ? 170 : target === 'palette' ? 210 : 260;
+    const max = target === 'sidebar' ? 360 : target === 'palette' ? 420 : 520;
+
+    const onMove = (moveEvent: MouseEvent) => {
+      const delta = moveEvent.clientX - startX;
+      const raw = reverse ? startWidth - delta : startWidth + delta;
+      const next = Math.min(max, Math.max(min, raw));
+
+      if (target === 'sidebar') {
+        setSidebarWidth(next);
+      } else if (target === 'palette') {
+        setPaletteWidth(next);
+      } else {
+        setConfigWidth(next);
+      }
+    };
+
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      document.body.classList.remove('is-resizing');
+    };
+
+    document.body.classList.add('is-resizing');
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -186,19 +225,6 @@ const DesignerApp = () => {
           </p>
         </div>
         <div className="topbar-actions">
-          <button type="button" className="secondary" onClick={() => setShowAppSidebar((v) => !v)}>
-            {showAppSidebar ? 'Hide App Sidebar' : 'Show App Sidebar'}
-          </button>
-          <button type="button" className="secondary" onClick={() => setShowPalette((v) => !v)}>
-            {showPalette ? 'Hide Node Palette' : 'Show Node Palette'}
-          </button>
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => setShowConfigPanel((v) => !v)}
-          >
-            {showConfigPanel ? 'Hide Config Panel' : 'Show Config Panel'}
-          </button>
           <button type="button" className="secondary" onClick={() => loadSample('onboarding')}>
             Load Onboarding Sample
           </button>
@@ -229,20 +255,46 @@ const DesignerApp = () => {
         </div>
       </header>
 
-      <main
-        className={[
-          'workspace-grid',
-          showAppSidebar ? '' : 'hide-app-sidebar',
-          showPalette ? '' : 'hide-palette',
-          showConfigPanel ? '' : 'hide-config',
-        ]
-          .filter(Boolean)
-          .join(' ')}
-      >
+      <main className="workspace-flex">
         {showAppSidebar && (
-          <AppSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+          <div className="panel-wrap" style={{ width: `${sidebarWidth}px` }}>
+            <AppSidebar
+              activeSection={activeSection}
+              onSectionChange={setActiveSection}
+              onToggle={() => setShowAppSidebar(false)}
+            />
+          </div>
         )}
-        {showPalette && <NodePalette onAddQuick={onQuickAdd} />}
+        {!showAppSidebar && (
+          <button
+            type="button"
+            className="collapsed-tab left"
+            onClick={() => setShowAppSidebar(true)}
+            aria-label="Show app sidebar"
+          >
+            {'>'}
+          </button>
+        )}
+
+        {showAppSidebar && <div className="resize-handle" onMouseDown={beginResize('sidebar')} />}
+
+        {showPalette && (
+          <div className="panel-wrap" style={{ width: `${paletteWidth}px` }}>
+            <NodePalette onAddQuick={onQuickAdd} onToggle={() => setShowPalette(false)} />
+          </div>
+        )}
+        {!showPalette && (
+          <button
+            type="button"
+            className="collapsed-tab left"
+            onClick={() => setShowPalette(true)}
+            aria-label="Show node palette"
+          >
+            {'>'}
+          </button>
+        )}
+
+        {showPalette && <div className="resize-handle" onMouseDown={beginResize('palette')} />}
 
         <section className="canvas-section" ref={canvasRef} onDrop={onDrop} onDragOver={onDragOver}>
           <div className="canvas-head">
@@ -273,8 +325,27 @@ const DesignerApp = () => {
           {automationsError && <p className="error">{automationsError}</p>}
         </section>
 
+        {showConfigPanel && <div className="resize-handle" onMouseDown={beginResize('config', true)} />}
+
         {showConfigPanel && (
-          <NodeConfigPanel node={selectedNode} automations={automations} onUpdate={updateNodeData} />
+          <div className="panel-wrap" style={{ width: `${configWidth}px` }}>
+            <NodeConfigPanel
+              node={selectedNode}
+              automations={automations}
+              onUpdate={updateNodeData}
+              onToggle={() => setShowConfigPanel(false)}
+            />
+          </div>
+        )}
+        {!showConfigPanel && (
+          <button
+            type="button"
+            className="collapsed-tab right"
+            onClick={() => setShowConfigPanel(true)}
+            aria-label="Show configuration panel"
+          >
+            {'<'}
+          </button>
         )}
       </main>
 
