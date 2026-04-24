@@ -25,6 +25,7 @@ body {
     radial-gradient(circle at 12% 10%, #e3f4ef 0%, transparent 36%),
     radial-gradient(circle at 88% 5%, #f9ecd9 0%, transparent 40%),
     linear-gradient(180deg, var(--bg) 0%, var(--bg-accent) 100%);
+  animation: bgFloat 12s ease-in-out infinite alternate;
 }
 
 #root {
@@ -49,6 +50,7 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+  animation: slideDown 380ms ease;
 }
 
 .topbar h1 {
@@ -239,6 +241,7 @@ body.is-resizing {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  animation: fadeUp 420ms ease;
 }
 
 .panel {
@@ -277,6 +280,12 @@ body.is-resizing {
   padding: 10px;
   display: grid;
   gap: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.palette-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(19, 35, 24, 0.08);
 }
 
 .palette-item strong {
@@ -303,11 +312,12 @@ button {
   border-radius: 10px;
   padding: 8px 10px;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.2s ease;
 }
 
 button:hover {
   transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(19, 111, 99, 0.18);
 }
 
 button:disabled {
@@ -399,6 +409,12 @@ button.secondary {
   border-radius: 10px;
   background: #fbfffd;
   padding: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.node-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(16, 71, 62, 0.12);
 }
 
 .node-selected {
@@ -442,6 +458,65 @@ button.secondary {
 .node-badge.warning {
   background: #fff1d9;
   color: #8a5a00;
+}
+
+.preset-row {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+button.small {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+}
+
+.condition-help {
+  margin-top: 12px;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bgFloat {
+  from {
+    background-position: 0% 0%, 100% 0%, 0% 0%;
+  }
+  to {
+    background-position: 3% 4%, 96% 2%, 0% 0%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
 }
 
 .sandbox-panel {

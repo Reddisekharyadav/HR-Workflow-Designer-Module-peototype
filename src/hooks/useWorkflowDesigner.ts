@@ -126,6 +126,7 @@ export const useWorkflowDesigner = () => {
     }
   });
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [history, setHistory] = useState<SerializedWorkflow[]>([]);
   const [future, setFuture] = useState<SerializedWorkflow[]>([]);
 
@@ -171,6 +172,7 @@ export const useWorkflowDesigner = () => {
           {
             ...connection,
             animated: false,
+            label: 'always',
             data: { condition: 'always' },
             id: `${connection.source}-${connection.target}-${Date.now()}`,
           },
@@ -205,6 +207,7 @@ export const useWorkflowDesigner = () => {
     (nextWorkflow: SerializedWorkflow) => {
       mutateWorkflow(() => nextWorkflow);
       setSelectedNodeId(null);
+      setSelectedEdgeId(null);
     },
     [mutateWorkflow],
   );
@@ -214,11 +217,37 @@ export const useWorkflowDesigner = () => {
     [workflow.nodes, selectedNodeId],
   );
 
+  const selectedEdge = useMemo(
+    () => workflow.edges.find((edge) => edge.id === selectedEdgeId) ?? null,
+    [workflow.edges, selectedEdgeId],
+  );
+
   const updateNodeData = useCallback(
     (nodeId: string, updater: (node: WorkflowNode) => WorkflowNode) => {
       mutateWorkflow((current) => ({
         ...current,
         nodes: current.nodes.map((node) => (node.id === nodeId ? updater(node) : node)),
+      }));
+    },
+    [mutateWorkflow],
+  );
+
+  const updateEdgeCondition = useCallback(
+    (edgeId: string, condition: string) => {
+      mutateWorkflow((current) => ({
+        ...current,
+        edges: current.edges.map((edge) =>
+          edge.id === edgeId
+            ? {
+                ...edge,
+                label: condition || 'always',
+                data: {
+                  ...(edge.data ?? {}),
+                  condition: condition || 'always',
+                },
+              }
+            : edge,
+        ),
       }));
     },
     [mutateWorkflow],
@@ -260,6 +289,7 @@ export const useWorkflowDesigner = () => {
     localStorage.removeItem(STORAGE_KEY);
     mutateWorkflow(() => ({ nodes: [], edges: [] }));
     setSelectedNodeId(null);
+    setSelectedEdgeId(null);
   }, [mutateWorkflow]);
 
   const nodes = workflow.nodes;
@@ -275,18 +305,22 @@ export const useWorkflowDesigner = () => {
     nodes,
     edges,
     selectedNode,
+    selectedEdge,
     selectedNodeId,
+    selectedEdgeId,
     validationIssues,
     serializedWorkflow,
     canUndo: history.length > 0,
     canRedo: future.length > 0,
     setSelectedNodeId,
+    setSelectedEdgeId,
     onNodesChange,
     onEdgesChange,
     onConnect,
     addNode,
     loadWorkflow,
     updateNodeData,
+    updateEdgeCondition,
     undo,
     redo,
     autoLayout,

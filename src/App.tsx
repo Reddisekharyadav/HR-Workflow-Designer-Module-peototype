@@ -16,6 +16,7 @@ import EndNode from './components/nodes/EndNode';
 import StartNode from './components/nodes/StartNode';
 import TaskNode from './components/nodes/TaskNode';
 import AppSidebar from './components/panels/AppSidebar';
+import EdgeConfigPanel from './components/panels/EdgeConfigPanel';
 import NodeConfigPanel from './components/panels/NodeConfigPanel';
 import NodePalette from './components/panels/NodePalette';
 import SandboxPanel from './components/panels/SandboxPanel';
@@ -43,7 +44,9 @@ const DesignerApp = () => {
     nodes,
     edges,
     selectedNode,
+    selectedEdge,
     setSelectedNodeId,
+    setSelectedEdgeId,
     validationIssues,
     serializedWorkflow,
     onNodesChange,
@@ -52,6 +55,7 @@ const DesignerApp = () => {
     addNode,
     loadWorkflow,
     updateNodeData,
+    updateEdgeCondition,
     undo,
     redo,
     autoLayout,
@@ -119,8 +123,12 @@ const DesignerApp = () => {
     addNode(type, x, y);
   };
 
-  const onSelectionChange = ({ nodes: selectedNodes }: OnSelectionChangeParams<WorkflowNode>) => {
+  const onSelectionChange = ({
+    nodes: selectedNodes,
+    edges: selectedEdges,
+  }: OnSelectionChangeParams<WorkflowNode, WorkflowEdge>) => {
     setSelectedNodeId(selectedNodes[0]?.id ?? null);
+    setSelectedEdgeId(selectedEdges[0]?.id ?? null);
   };
 
   const decoratedNodes = useMemo(() => {
@@ -388,12 +396,20 @@ const DesignerApp = () => {
 
         {showConfigPanel && (
           <div className="panel-wrap" style={{ width: `${configWidth}px` }}>
-            <NodeConfigPanel
-              node={selectedNode}
-              automations={automations}
-              onUpdate={updateNodeData}
-              onToggle={() => setShowConfigPanel(false)}
-            />
+            {selectedEdge ? (
+              <EdgeConfigPanel
+                edge={selectedEdge}
+                onToggle={() => setShowConfigPanel(false)}
+                onUpdateCondition={updateEdgeCondition}
+              />
+            ) : (
+              <NodeConfigPanel
+                node={selectedNode}
+                automations={automations}
+                onUpdate={updateNodeData}
+                onToggle={() => setShowConfigPanel(false)}
+              />
+            )}
           </div>
         )}
         {!showConfigPanel && (
