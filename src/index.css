@@ -382,6 +382,8 @@ button.secondary {
   border-radius: 8px;
   padding: 8px;
   background: #fff;
+  width: 100%;
+  min-width: 0;
 }
 
 .field-block textarea {
@@ -389,10 +391,45 @@ button.secondary {
   resize: vertical;
 }
 
+.field-block button {
+  width: fit-content;
+  max-width: 100%;
+}
+
 .kv-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
+}
+
+.config-panel .field-block,
+.config-panel .panel-title-row,
+.config-panel p,
+.config-panel .toggle-row {
+  min-width: 0;
+}
+
+.config-panel .field-block label,
+.config-panel .field-block input,
+.config-panel .field-block textarea,
+.config-panel .field-block select {
+  max-width: 100%;
+}
+
+.config-panel .field-block > button {
+  align-self: flex-start;
+}
+
+.preset-row {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preset-row .small {
+  flex: 1 1 118px;
+  min-width: 0;
 }
 
 .toggle-row {
@@ -476,6 +513,16 @@ button.small {
   margin-top: 12px;
   font-size: 0.8rem;
   line-height: 1.35;
+}
+
+@media (max-width: 900px) {
+  .kv-row {
+    grid-template-columns: 1fr;
+  }
+
+  .preset-row .small {
+    flex: 1 1 100%;
+  }
 }
 
 @keyframes fadeUp {
