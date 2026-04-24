@@ -19,6 +19,7 @@ import AppSidebar from './components/panels/AppSidebar';
 import NodeConfigPanel from './components/panels/NodeConfigPanel';
 import NodePalette from './components/panels/NodePalette';
 import SandboxPanel from './components/panels/SandboxPanel';
+import { loadWorkflowDraft, saveWorkflowDraft } from './api/workflowApi';
 import { useAutomations } from './hooks/useAutomations';
 import { useWorkflowDesigner } from './hooks/useWorkflowDesigner';
 import type { SerializedWorkflow, WorkflowEdge, WorkflowNode, WorkflowNodeType } from './types/workflow';
@@ -51,6 +52,12 @@ const DesignerApp = () => {
     addNode,
     loadWorkflow,
     updateNodeData,
+    undo,
+    redo,
+    autoLayout,
+    clearDraft,
+    canUndo,
+    canRedo,
   } = useWorkflowDesigner();
 
   const { automations, loading: loadingAutomations, error: automationsError } = useAutomations();
@@ -116,6 +123,28 @@ const DesignerApp = () => {
     setSelectedNodeId(selectedNodes[0]?.id ?? null);
   };
 
+  const decoratedNodes = useMemo(() => {
+    const issuesByNode = new Map<string, typeof validationIssues>();
+
+    validationIssues.forEach((issue) => {
+      if (!issue.nodeId) {
+        return;
+      }
+
+      const list = issuesByNode.get(issue.nodeId) ?? [];
+      list.push(issue);
+      issuesByNode.set(issue.nodeId, list);
+    });
+
+    return nodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        uiIssues: issuesByNode.get(node.id) ?? [],
+      },
+    }));
+  }, [nodes, validationIssues]);
+
   const exportWorkflow = () => {
     const payload = JSON.stringify(serializedWorkflow, null, 2);
     const blob = new Blob([payload], { type: 'application/json' });
@@ -179,6 +208,18 @@ const DesignerApp = () => {
     }
   };
 
+  const saveDraft = async () => {
+    await saveWorkflowDraft(serializedWorkflow);
+  };
+
+  const restoreDraft = async () => {
+    const draft = await loadWorkflowDraft();
+
+    if (draft) {
+      loadWorkflow(draft);
+    }
+  };
+
   const beginResize = (
     target: 'sidebar' | 'palette' | 'config',
     reverse = false,
@@ -225,6 +266,24 @@ const DesignerApp = () => {
           </p>
         </div>
         <div className="topbar-actions">
+          <button type="button" className="secondary" onClick={undo} disabled={!canUndo}>
+            Undo
+          </button>
+          <button type="button" className="secondary" onClick={redo} disabled={!canRedo}>
+            Redo
+          </button>
+          <button type="button" className="secondary" onClick={autoLayout}>
+            Auto Layout
+          </button>
+          <button type="button" className="secondary" onClick={saveDraft}>
+            Save Draft
+          </button>
+          <button type="button" className="secondary" onClick={restoreDraft}>
+            Load Draft
+          </button>
+          <button type="button" className="secondary" onClick={clearDraft}>
+            Clear Draft
+          </button>
           <button type="button" className="secondary" onClick={() => loadSample('onboarding')}>
             Load Onboarding Sample
           </button>
@@ -304,7 +363,7 @@ const DesignerApp = () => {
 
           <ReactFlow
             fitView
-            nodes={nodes}
+            nodes={decoratedNodes}
             edges={edges}
             nodeTypes={nodeTypes}
             onInit={setReactFlowInstance}

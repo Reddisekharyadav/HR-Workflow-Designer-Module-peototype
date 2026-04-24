@@ -125,7 +125,28 @@ src/
 ## If More Time Were Available
 
 - Undo/redo stack
+  - Approach: use a command-history model that records graph mutations (add node, move node, connect edge, delete node, update form field).
+  - Example: HR admin edits Task assignee from "HR Ops" to "HRBP", then presses Undo to restore previous value without losing other canvas changes.
+  - Example: admin creates three nodes and two edges, then uses Ctrl+Z twice to remove only the latest edge operations.
+
 - Visual node-level error badges
-- Auto-layout integration (dagre/elk)
+  - Approach: map validation issues to node IDs and render inline badges on each affected node (error and warning states).
+  - Example: a Task node with no outgoing edge shows "Missing next step" badge directly on canvas.
+  - Example: Start node with incoming edge gets a red "Invalid incoming connection" badge and tooltip guidance.
+
+- Auto-layout integration (dagre or elk)
+  - Approach: add a "Auto Arrange" action that computes positions from graph topology and applies smooth transitions.
+  - Example: onboarding flow automatically organizes to top-down lane with Start at top and End at bottom.
+  - Example: branched approval flow places parallel branches side by side and merges back into final automation step.
+
 - Better branch-aware simulation with conditional paths
+  - Approach: introduce edge conditions and runtime context (for example, leaveDays, department, grade) to choose execution paths.
+  - Example: if leaveDays <= 2 route directly to manager approval; else route through HRBP and Director approvals.
+  - Example: if documentValidation fails, route to correction task and re-run validation loop until successful.
+
 - Persist workflows to backend
+  - Approach: add workflow CRUD APIs with versioning and optimistic locking.
+  - Example endpoints: create workflow draft, update by version, publish version, list published workflows.
+  - Example: two admins editing same workflow get a conflict prompt and can merge changes instead of overwriting each other.
+
+

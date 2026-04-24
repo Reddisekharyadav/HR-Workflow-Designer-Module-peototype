@@ -2,6 +2,10 @@ import type { Edge, Node } from '@xyflow/react';
 
 export type WorkflowNodeType = 'start' | 'task' | 'approval' | 'automated' | 'end';
 
+export type WorkflowEdgeData = {
+  condition?: string;
+};
+
 export type KeyValueField = {
   key: string;
   value: string;
@@ -55,8 +59,12 @@ export type WorkflowNodeData =
   | AutomatedStepNodeData
   | EndNodeData;
 
-export type WorkflowNode = Node<WorkflowNodeData>;
-export type WorkflowEdge = Edge;
+export type WorkflowNodeUiData = {
+  uiIssues?: ValidationIssue[];
+};
+
+export type WorkflowNode = Node<WorkflowNodeData & WorkflowNodeUiData>;
+export type WorkflowEdge = Edge<WorkflowEdgeData>;
 
 export type SerializedWorkflow = {
   nodes: WorkflowNode[];
